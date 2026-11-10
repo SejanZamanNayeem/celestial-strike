@@ -464,6 +464,40 @@
 </div>
 
 <script>
+/**
+ * Image Assets Loader
+ */
+const IMAGES = {
+    main: {},
+    helper: {},
+    enemy: {},
+    boss: {}
+};
+
+function loadPlaneImages() {
+    for (let i = 1; i <= 5; i++) {
+        const m = new Image();
+        m.src = `Main%20Plane%20${i}.jpeg`;
+        IMAGES.main[i] = m;
+
+        const h = new Image();
+        h.src = `Helper%20Plane%20${i}.jpeg`;
+        IMAGES.helper[i] = h;
+
+        const e = new Image();
+        e.src = `Enemy%20Plane%20${i}.jpeg`;
+        IMAGES.enemy[i] = e;
+
+        const b = new Image();
+        b.src = `Boss%20Plane%20${i}.jpeg`;
+        IMAGES.boss[i] = b;
+    }
+}
+loadPlaneImages();
+
+/**
+ * Audio Synthesizer (Zero Dependencies Web Audio API)
+ */
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
@@ -539,6 +573,9 @@ function playSound(type) {
     }
 }
 
+/**
+ * Canvas & Dimensions Setup
+ */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const container = document.getElementById('game-container');
@@ -643,8 +680,8 @@ const player = {
     maxHp: 400,
     hp: 400,
     tier: 1,
-    width: 48,
-    height: 52,
+    width: 58,
+    height: 64,
     speed: 7.5,
     autoFireRate: 110,
     lastFire: 0,
@@ -670,7 +707,7 @@ function refreshWingmen() {
     const helperHp = Math.floor(player.maxHp / 5);
     for (let i = 0; i < count; i++) {
         const offsetDirection = (i % 2 === 0) ? -1 : 1;
-        const dist = 36 + Math.floor(i / 2) * 24;
+        const dist = 38 + Math.floor(i / 2) * 26;
         wingmen.push({
             distX: offsetDirection * dist,
             distY: 15 + Math.floor(i / 2) * 15,
@@ -678,7 +715,7 @@ function refreshWingmen() {
             y: player.y,
             maxHp: helperHp,
             hp: helperHp,
-            size: 16 + player.tier * 2,
+            size: 26 + player.tier * 2,
             tier: player.tier,
             lastShot: 0
         });
@@ -697,7 +734,7 @@ function addOrRepairWingman() {
     if (wingmen.length < Math.min(4, player.tier + 1)) {
         const idx = wingmen.length;
         const offsetDirection = (idx % 2 === 0) ? -1 : 1;
-        const dist = 36 + Math.floor(idx / 2) * 24;
+        const dist = 38 + Math.floor(idx / 2) * 26;
         wingmen.push({
             distX: offsetDirection * dist,
             distY: 15 + Math.floor(idx / 2) * 15,
@@ -705,7 +742,7 @@ function addOrRepairWingman() {
             y: player.y,
             maxHp: helperHp,
             hp: helperHp,
-            size: 16 + player.tier * 2,
+            size: 26 + player.tier * 2,
             tier: player.tier,
             lastShot: 0
         });
@@ -753,11 +790,11 @@ function spawnBoss() {
     boss = {
         x: W / 2,
         y: -140,
-        targetY: 110,
+        targetY: 120,
         maxHp: hp,
         hp: hp,
-        width: 140 + tier * 25,
-        height: 95 + tier * 18,
+        width: 160 + tier * 28,
+        height: 120 + tier * 20,
         speedX: (tier === 5) ? 0 : 2.0,
         dir: 1,
         tier: tier,
@@ -1281,7 +1318,7 @@ function update() {
                         vx: 1.2,
                         vy: 1.8,
                         offset: Math.random() * 5,
-                        size: 26,
+                        size: 32,
                         maxHp: 100 * player.tier,
                         hp: 100 * player.tier,
                         tier: player.tier
@@ -1542,7 +1579,7 @@ function spawnSoldier(tierOverride) {
         vx: Math.random() * 2 + 1,
         vy: Math.random() * 1.5 + 2.0,
         offset: Math.random() * 10,
-        size: 20 + tier * 2,
+        size: 26 + tier * 3,
         maxHp: 100 * tier,
         hp: 100 * tier,
         tier: tier
@@ -1697,6 +1734,9 @@ function restartGame() {
     updateSkillsHUD();
 }
 
+/**
+ * Image-Render Engine with Procedural Fallbacks
+ */
 function drawPlayerJet(p) {
     ctx.save();
     ctx.translate(p.x, p.y);
@@ -1729,53 +1769,24 @@ function drawPlayerJet(p) {
         ctx.fillText(`HITS: ${p.shieldHitsLeft}/5`, 0, -p.height / 2 - 14);
     }
 
-    const t = p.tier;
-
-    const plumeColor = (t <= 2) ? '#38bdf8' : '#f97316';
-    ctx.fillStyle = plumeColor;
-    ctx.beginPath();
-    ctx.moveTo(-7, p.height / 2 - 4);
-    ctx.lineTo(0, p.height / 2 + 15 + Math.random() * 8);
-    ctx.lineTo(7, p.height / 2 - 4);
-    ctx.fill();
-
-    if (t >= 3) {
-        [-18, 18].forEach(px => {
-            ctx.fillStyle = '#f59e0b';
-            ctx.beginPath();
-            ctx.moveTo(px - 4, p.height / 3);
-            ctx.lineTo(px, p.height / 3 + 12 + Math.random() * 6);
-            ctx.lineTo(px + 4, p.height / 3);
-            ctx.fill();
-        });
+    const img = IMAGES.main[p.tier];
+    if (img && img.complete && img.naturalWidth !== 0) {
+        ctx.drawImage(img, -p.width / 2, -p.height / 2, p.width, p.height);
+    } else {
+        const t = p.tier;
+        ctx.fillStyle = (t <= 2) ? '#1e3a8a' : (t <= 4 ? '#7f1d1d' : '#831843');
+        ctx.strokeStyle = (t <= 2) ? '#60a5fa' : (t <= 4 ? '#f97316' : '#f43f5e');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -p.height / 2);
+        ctx.lineTo(p.width / 2, p.height / 3);
+        ctx.lineTo(p.width / 4, p.height / 2);
+        ctx.lineTo(-p.width / 4, p.height / 2);
+        ctx.lineTo(-p.width / 2, p.height / 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
     }
-
-    const primaryColor = (t <= 2) ? '#1e3a8a' : (t <= 4 ? '#7f1d1d' : '#831843');
-    const accentColor = (t <= 2) ? '#60a5fa' : (t <= 4 ? '#f97316' : '#f43f5e');
-
-    ctx.fillStyle = primaryColor;
-    ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.moveTo(0, -p.height / 2);
-    ctx.lineTo(p.width / 2 + (t * 3), p.height / 3);
-    ctx.lineTo(p.width / 4, p.height / 2);
-    ctx.lineTo(-p.width / 4, p.height / 2);
-    ctx.lineTo(-p.width / 2 - (t * 3), p.height / 3);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#334155';
-    [-p.width / 2, p.width / 2].forEach(cx => {
-        ctx.fillRect(cx - 2, -p.height / 4, 4, p.height / 2);
-    });
-
-    ctx.fillStyle = (t <= 2) ? '#38bdf8' : '#fbbf24';
-    ctx.beginPath();
-    ctx.ellipse(0, -6, 5, 12, 0, 0, Math.PI * 2);
-    ctx.fill();
 
     ctx.restore();
 }
@@ -1790,21 +1801,22 @@ function drawWingman(wm) {
     ctx.fillStyle = '#34d399';
     ctx.fillRect(-14, -wm.size - 8, 28 * pct, 3.5);
 
-    ctx.fillStyle = '#3f4818';
-    ctx.strokeStyle = '#eab308';
-    ctx.lineWidth = 1.5;
-
-    ctx.beginPath();
-    ctx.moveTo(0, -wm.size);
-    ctx.lineTo(wm.size * 0.85, wm.size * 0.75);
-    ctx.lineTo(0, wm.size * 0.3);
-    ctx.lineTo(-wm.size * 0.85, wm.size * 0.75);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(-2, wm.size * 0.5, 4, 6);
+    const img = IMAGES.helper[wm.tier];
+    if (img && img.complete && img.naturalWidth !== 0) {
+        ctx.drawImage(img, -wm.size, -wm.size, wm.size * 2, wm.size * 2);
+    } else {
+        ctx.fillStyle = '#3f4818';
+        ctx.strokeStyle = '#eab308';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -wm.size);
+        ctx.lineTo(wm.size * 0.85, wm.size * 0.75);
+        ctx.lineTo(0, wm.size * 0.3);
+        ctx.lineTo(-wm.size * 0.85, wm.size * 0.75);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
 
     ctx.restore();
 }
@@ -1813,30 +1825,22 @@ function drawEnemyJet(e) {
     ctx.save();
     ctx.translate(e.x, e.y);
 
-    ctx.fillStyle = '#450a0a';
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 1.5;
-
-    ctx.beginPath();
-    ctx.moveTo(0, e.size);
-    ctx.lineTo(e.size * 0.9, -e.size * 0.5);
-    ctx.lineTo(0, -e.size * 0.2);
-    ctx.lineTo(-e.size * 0.9, -e.size * 0.5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#dc2626';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 4, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#f97316';
-    ctx.beginPath();
-    ctx.moveTo(-4, -e.size * 0.5);
-    ctx.lineTo(0, -e.size * 0.8 - Math.random() * 4);
-    ctx.lineTo(4, -e.size * 0.5);
-    ctx.fill();
+    const img = IMAGES.enemy[e.tier];
+    if (img && img.complete && img.naturalWidth !== 0) {
+        ctx.drawImage(img, -e.size, -e.size, e.size * 2, e.size * 2);
+    } else {
+        ctx.fillStyle = '#450a0a';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, e.size);
+        ctx.lineTo(e.size * 0.9, -e.size * 0.5);
+        ctx.lineTo(0, -e.size * 0.2);
+        ctx.lineTo(-e.size * 0.9, -e.size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
 
     ctx.restore();
 }
@@ -1856,38 +1860,30 @@ function drawBossJet(b) {
         ctx.setLineDash([]);
     }
 
-    ctx.fillStyle = '#1c1917';
-    ctx.strokeStyle = '#f43f5e';
-    ctx.lineWidth = 3;
-
-    ctx.beginPath();
-    ctx.moveTo(0, b.height / 2);
-    ctx.lineTo(b.width / 2, -b.height / 4);
-    ctx.lineTo(b.width / 3, -b.height / 2);
-    ctx.lineTo(-b.width / 3, -b.height / 2);
-    ctx.lineTo(-b.width / 2, -b.height / 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#ef4444';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#ef4444';
-    ctx.beginPath();
-    ctx.arc(0, 5, 16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    if (b.tier === 5) {
-        [-80, 80].forEach(hx => {
-            ctx.fillStyle = '#f59e0b';
-            ctx.fillRect(hx - 8, b.height / 4, 16, 8);
-        });
+    const img = IMAGES.boss[b.tier];
+    if (img && img.complete && img.naturalWidth !== 0) {
+        ctx.drawImage(img, -b.width / 2, -b.height / 2, b.width, b.height);
+    } else {
+        ctx.fillStyle = '#1c1917';
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, b.height / 2);
+        ctx.lineTo(b.width / 2, -b.height / 4);
+        ctx.lineTo(b.width / 3, -b.height / 2);
+        ctx.lineTo(-b.width / 3, -b.height / 2);
+        ctx.lineTo(-b.width / 2, -b.height / 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
     }
 
     ctx.restore();
 }
 
+/**
+ * Rendering Loop
+ */
 function draw() {
     ctx.clearRect(0, 0, W, H);
 
