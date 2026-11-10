@@ -465,7 +465,7 @@
 
 <script>
 /**
- * Image Assets Loader
+ * PNG Image Assets Loader
  */
 const IMAGES = {
     main: {},
@@ -477,19 +477,19 @@ const IMAGES = {
 function loadPlaneImages() {
     for (let i = 1; i <= 5; i++) {
         const m = new Image();
-        m.src = `Main%20Plane%20${i}.jpeg`;
+        m.src = `Main%20Plane%20${i}.png`;
         IMAGES.main[i] = m;
 
         const h = new Image();
-        h.src = `Helper%20Plane%20${i}.jpeg`;
+        h.src = `Helper%20Plane%20${i}.png`;
         IMAGES.helper[i] = h;
 
         const e = new Image();
-        e.src = `Enemy%20Plane%20${i}.jpeg`;
+        e.src = `Enemy%20Plane%20${i}.png`;
         IMAGES.enemy[i] = e;
 
         const b = new Image();
-        b.src = `Boss%20Plane%20${i}.jpeg`;
+        b.src = `Boss%20Plane%20${i}.png`;
         IMAGES.boss[i] = b;
     }
 }
@@ -1735,7 +1735,7 @@ function restartGame() {
 }
 
 /**
- * Image-Render Engine with Procedural Fallbacks
+ * Image-Render Engine (Direct PNG Rendering without extra rotation)
  */
 function drawPlayerJet(p) {
     ctx.save();
